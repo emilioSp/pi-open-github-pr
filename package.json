@@ -1,0 +1,83 @@
+{
+  "name": "@emiliosp/pi-open-github-pr",
+  "version": "0.1.0",
+  "description": "A Pi extension to open a GitHub PR",
+  "license": "MIT",
+  "type": "module",
+  "imports": {
+    "#extensions/*": "./extensions/*",
+    "#guards/*": "./guards/*",
+    "#services/*": "./services/*",
+    "#bash-commands/*": "./bash-commands/*",
+    "#tools/*": "./tools/*",
+    "#workflow/*": "./workflow/*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/emilioSp/pi-open-github-pr.git"
+  },
+  "homepage": "https://github.com/emilioSp/pi-open-github-pr#readme",
+  "bugs": {
+    "url": "https://github.com/emilioSp/pi-open-github-pr/issues"
+  },
+  "keywords": [
+    "pi-package",
+    "pi",
+    "pi-coding-agent",
+    "github",
+    "PR"
+  ],
+  "files": [
+    "README.md",
+    "extensions/open-github-pr.ts",
+    "guards/git-command-bash-guard.ts",
+    "services/inspect-repository.ts",
+    "services/publish-pull-request.ts",
+    "workflow/open-github-pr-workflow.ts",
+    "bash-commands/git-command.ts",
+    "bash-commands/github-command.ts",
+    "tools/inspect-repository-before-pr.ts",
+    "tools/publish-pull-request.ts",
+    "templates/pull-request_template.md"
+  ],
+  "os": [
+    "darwin",
+    "linux"
+  ],
+  "engines": {
+    "node": ">=26.0.0"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest --run",
+    "check": "npm run lint && npm run typecheck && npm test",
+    "prepublishOnly": "npm run check",
+    "publish:npm": "npm publish --access public",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write ."
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.14",
+    "@types/node": "26.6.1",
+    "typescript": "7.0.2",
+    "vitest": "5.0.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "pi": {
+    "extensions": [
+      "./extensions/open-github-pr.ts"
+    ]
+  },
+  "allowScripts": {
+    "fsevents@2.3.3": true,
+    "esbuild@0.28.2": true,
+    "@google/genai": false,
+    "protobufjs": false
+  }
+}
