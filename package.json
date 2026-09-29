@@ -1,6 +1,6 @@
 {
   "name": "@emiliosp/pi-open-github-pr",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A Pi extension to open a GitHub PR",
   "license": "MIT",
   "type": "module",
