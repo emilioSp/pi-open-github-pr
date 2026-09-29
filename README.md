@@ -8,6 +8,14 @@ The current checkout must be a Git repository with an `origin` remote. The `git`
 
 The extension supports macOS and Linux. Windows is not supported.
 
+## Installation
+
+Install the package in Pi with:
+
+```bash
+pi install npm:@emiliosp/pi-open-github-pr
+```
+
 ## Usage
 
 Load the extension in Pi, then run:
