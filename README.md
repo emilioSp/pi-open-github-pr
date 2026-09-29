@@ -2,9 +2,7 @@
 
 A Pi extension that uses the agent to inspect committed changes, generate a pull request title and description, and open or update the GitHub Pull Request.
 
-## Demo
-
-[![Watch the open-github-pr demo](docs/pi-open-gh-pr-preview.png)](pi-open-gh-pr.mp4)
+![pi-open-gh-pr.gif](pi-open-gh-pr.gif)
 
 ## Prerequisites
 
