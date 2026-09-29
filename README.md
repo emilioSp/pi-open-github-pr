@@ -2,6 +2,8 @@
 
 A Pi extension that uses the agent to inspect committed changes, generate a pull request title and description, and open or update the GitHub Pull Request.
 
+[pi-open-gh-pr.mp4](pi-open-gh-pr.mp4)
+
 ## Prerequisites
 
 The current checkout must be a Git repository with an `origin` remote. The `git` executable and authenticated GitHub CLI (`gh`) must be available.
