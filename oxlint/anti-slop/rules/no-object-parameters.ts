@@ -5,12 +5,13 @@ import type { ESTree } from "@oxlint/plugins";
 import {
 	functionParameterBindingName,
 	functionParameterTypeAnnotation,
-} from "../shared/function-parameters.ts";
+} from "../utils/function-parameters.ts";
 import {
 	createTypeAliasEnvironment,
 	resolvedTypeMatches,
 	type TypeAliasEnvironment,
-} from "../shared/type-alias-resolution.ts";
+} from "../utils/type-alias-resolution.ts";
+
 type ParameterOwner =
 	| ESTree.ArrowFunctionExpression
 	| ESTree.Function
@@ -30,7 +31,7 @@ export const noObjectParametersRule = defineRule({
 		},
 		messages: {
 			objectParameter:
-				"Parameter `{{parameter}}` uses the broad `object` type. Accept a named owner type; parse external input at its boundary before calling this function.",
+				"Parameter `{{parameter}}` uses the broad `object` type, which does not describe its properties. Use a named type for the expected value, or validate external input before passing it here.",
 		},
 	},
 	createOnce(context) {
@@ -40,9 +41,11 @@ export const noObjectParametersRule = defineRule({
 			environment !== null &&
 			resolvedTypeMatches(type, environment, (resolved, matches) => {
 				if (resolved.type === "TSObjectKeyword") return true;
+
 				if (resolved.type === "TSParenthesizedType") {
 					return matches(resolved.typeAnnotation);
 				}
+
 				return (
 					resolved.type === "TSUnionType" && resolved.types.some(matches)
 				);
@@ -51,7 +54,9 @@ export const noObjectParametersRule = defineRule({
 		const checkParameters = (node: ParameterOwner) => {
 			for (const parameter of node.params) {
 				const annotation = functionParameterTypeAnnotation(parameter);
+
 				if (annotation === null || annotation === undefined) continue;
+
 				if (!resolvesToObject(annotation.typeAnnotation)) continue;
 				context.report({
 					node: annotation.typeAnnotation,

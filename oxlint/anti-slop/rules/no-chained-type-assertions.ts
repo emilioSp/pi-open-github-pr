@@ -9,14 +9,17 @@ function isTypeAssertionExpression(node: ESTree.Node): node is TypeAssertionExpr
 
 function unwrapParenthesizedExpression(expression: ESTree.Expression): ESTree.Expression {
   let current = expression;
+
   while (current.type === "ParenthesizedExpression") {
     current = current.expression;
   }
+
   return current;
 }
 
 function isConstAssertion(node: TypeAssertionExpression): boolean {
   const { typeAnnotation } = node;
+
   return (
     typeAnnotation.type === "TSTypeReference" &&
     typeAnnotation.typeName.type === "Identifier" &&
@@ -60,7 +63,7 @@ export const noChainedTypeAssertionsRule = defineRule({
     },
     messages: {
       chained:
-        "This assertion chain discards type evidence. Keep the original precise type, or parse untrusted input at its boundary before narrowing it.",
+        "Do not chain type assertions. Keep the original type, or validate external input with a named type guard before using the domain type.",
     },
   },
   createOnce(context) {

@@ -6,7 +6,7 @@ import {
 	createTypeAliasEnvironment,
 	resolvedTypeMatches,
 	type TypeAliasEnvironment,
-} from "../shared/type-alias-resolution.ts";
+} from "../utils/type-alias-resolution.ts";
 
 /** Ban named aliases that merely conceal TypeScript's unknown top type. */
 export const noUnknownTypeAliasesRule = defineRule({
@@ -18,7 +18,7 @@ export const noUnknownTypeAliasesRule = defineRule({
 		},
 		messages: {
 			unknownAlias:
-				"Type alias `{{alias}}` hides `unknown`. Keep `unknown` explicit at the parsing boundary or on an allowed `cause` field; otherwise use the parsed owner type.",
+				"Type alias `{{alias}}` resolves to `unknown`. Keep `unknown` visible, or define a type that describes the value instead of hiding it behind an alias.",
 		},
 	},
 	createOnce(context) {
@@ -28,9 +28,11 @@ export const noUnknownTypeAliasesRule = defineRule({
 			environment !== null &&
 			resolvedTypeMatches(type, environment, (resolved, matches) => {
 				if (resolved.type === "TSUnknownKeyword") return true;
+
 				if (resolved.type === "TSParenthesizedType") {
 					return matches(resolved.typeAnnotation);
 				}
+
 				return resolved.type === "TSUnionType" && resolved.types.some(matches);
 			});
 

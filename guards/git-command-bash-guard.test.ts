@@ -28,7 +28,7 @@ describe('Bash guard', () => {
       },
     };
 
-    // SAFETY: The test mock implements the ExtensionAPI method used by the guard.
+    // JUSTIFICATION: The test mock implements the ExtensionAPI method used by the guard.
     gitCommandBashGuard.activate(pi as ExtensionAPI);
 
     const result = await handler?.({
@@ -54,7 +54,7 @@ describe('Bash guard', () => {
       },
     };
 
-    // SAFETY: The test mock implements the ExtensionAPI method used by the guard.
+    // JUSTIFICATION: The test mock implements the ExtensionAPI method used by the guard.
     gitCommandBashGuard.activate(pi as ExtensionAPI);
 
     const result = await handler?.({

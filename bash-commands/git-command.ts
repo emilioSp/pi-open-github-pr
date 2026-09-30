@@ -237,7 +237,7 @@ const runGitCommandWithLimitedOutput = async ({
     const closeResult = await once(child, 'close');
     const [stdout, stderr] = await Promise.all([stdoutPromise, stderrPromise]);
 
-    // SAFETY: ChildProcess's `close` event emits the exit code and signal in this order.
+    // JUSTIFICATION: ChildProcess's `close` event emits the exit code and signal in this order.
     const [exitCode, signal] = closeResult as [
       number | null,
       NodeJS.Signals | null,
