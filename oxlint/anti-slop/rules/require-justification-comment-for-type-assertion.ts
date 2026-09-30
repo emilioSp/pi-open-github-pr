@@ -4,6 +4,10 @@ import type { ESTree, SourceCode } from "@oxlint/plugins";
 
 type TypeAssertion = ESTree.TSAsExpression | ESTree.TSTypeAssertion;
 
+type MarkerOptions = {
+  readonly markers?: unknown;
+};
+
 const DEFAULT_JUSTIFICATION_MARKERS = ["JUSTIFICATION"] as const;
 
 const commentOwnerKinds = new Set([
@@ -14,6 +18,14 @@ const commentOwnerKinds = new Set([
   "VariableDeclaration",
 ]);
 
+function isMarkerOptions(value: unknown): value is MarkerOptions {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isNonEmptyMarker(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
 function isConstAssertion(node: TypeAssertion): boolean {
   return (
     node.typeAnnotation.type === "TSTypeReference" &&
@@ -23,17 +35,11 @@ function isConstAssertion(node: TypeAssertion): boolean {
 }
 
 function configuredJustificationMarkers(option: unknown): readonly string[] {
-  if (typeof option !== "object" || option === null || !("markers" in option)) {
+  if (!isMarkerOptions(option) || !Array.isArray(option.markers)) {
     return DEFAULT_JUSTIFICATION_MARKERS;
   }
 
-  const configured = option.markers;
-
-  if (!Array.isArray(configured)) return DEFAULT_JUSTIFICATION_MARKERS;
-
-  const markers = configured.flatMap((marker) =>
-    typeof marker === "string" && marker.trim().length > 0 ? [marker.trim()] : [],
-  );
+  const markers = option.markers.filter(isNonEmptyMarker).map((marker) => marker.trim());
 
   return markers.length > 0 ? markers : DEFAULT_JUSTIFICATION_MARKERS;
 }

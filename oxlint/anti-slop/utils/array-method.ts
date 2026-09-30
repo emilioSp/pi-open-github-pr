@@ -1,5 +1,11 @@
 import type { ESTree, Scope, SourceCode, Variable } from "@oxlint/plugins";
 
+type StringLiteral = ESTree.StringLiteral;
+
+function isStringLiteral(node: ESTree.Node): node is StringLiteral {
+  return node.type === "Literal" && typeof node.value === "string";
+}
+
 /** Unwrap syntax-only wrappers when inspecting array methods and accumulator references. */
 export function unwrapArrayExpression(node: ESTree.Node): ESTree.Node {
   while (
@@ -46,7 +52,7 @@ export function arrayMethodTarget(
     return { name: property.name, object: node.object };
   }
 
-  if (node.computed && property.type === "Literal" && typeof property.value === "string") {
+  if (node.computed && isStringLiteral(property)) {
     return { name: property.value, object: node.object };
   }
 

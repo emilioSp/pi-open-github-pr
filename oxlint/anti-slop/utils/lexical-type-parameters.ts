@@ -17,7 +17,10 @@ function collectInferTypeParameterNames(
 	names: Set<string>,
 ): void {
 	if (node.type === "TSInferType") names.add(node.typeParameter.name.name);
-	const record = node as unknown as Readonly<Record<string, unknown>>;
+	const unknownNode: unknown = node;
+
+	// JUSTIFICATION: Oxlint's visitor keys identify only ESTree child-node properties.
+	const record = unknownNode as Readonly<Record<string, unknown>>;
 
 	for (const key of visitorKeys[node.type] ?? []) {
 		const value = record[key];
