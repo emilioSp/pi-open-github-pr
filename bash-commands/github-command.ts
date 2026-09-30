@@ -28,6 +28,13 @@ export const GITHUB_COMMAND_ERROR_CODES = {
 export type GitHubCommandErrorCode =
   (typeof GITHUB_COMMAND_ERROR_CODES)[keyof typeof GITHUB_COMMAND_ERROR_CODES];
 
+type ExecFileError = Error & {
+  code?: string | number;
+  killed?: boolean;
+  stdout?: string;
+  stderr?: string;
+};
+
 export class GitHubCommandError extends Error {
   readonly code: GitHubCommandErrorCode;
   readonly arguments: readonly string[];
@@ -104,16 +111,13 @@ export const runGitHubCommand = async ({
       exitCode: 0,
     };
   } catch (cause) {
-    const error = cause as Error & {
-      code?: string | number;
-      killed?: boolean;
-      stdout?: string;
-      stderr?: string;
-    };
-    const stdout = error.stdout ?? '';
-    const stderr = error.stderr ?? '';
+    const error: ExecFileError | undefined =
+      cause instanceof Error ? cause : undefined;
 
-    if (error.killed) {
+    const stdout = error?.stdout ?? '';
+    const stderr = error?.stderr ?? '';
+
+    if (error?.killed) {
       throw new GitHubCommandError({
         code: GITHUB_COMMAND_ERROR_CODES.TIMEOUT,
         message: `GitHub CLI command timed out after ${timeoutMs} ms.`,
@@ -125,7 +129,7 @@ export const runGitHubCommand = async ({
       });
     }
 
-    if (error.code === 'ENOENT') {
+    if (error?.code === 'ENOENT') {
       throw new GitHubCommandError({
         code: GITHUB_COMMAND_ERROR_CODES.NOT_FOUND,
         message: 'GitHub CLI executable was not found.',
@@ -137,14 +141,14 @@ export const runGitHubCommand = async ({
       });
     }
 
-    const exitCode = typeof error.code === 'number' ? error.code : null;
+    const exitCode = Number.isInteger(error?.code) ? Number(error?.code) : null;
 
     throw new GitHubCommandError({
       code:
         exitCode === null
           ? GITHUB_COMMAND_ERROR_CODES.EXECUTION_FAILED
           : GITHUB_COMMAND_ERROR_CODES.COMMAND_FAILED,
-      message: `GitHub CLI command failed: ${error.message}`,
+      message: `GitHub CLI command failed: ${error?.message ?? String(cause)}`,
       arguments: githubArguments,
       cwd,
       stdout,

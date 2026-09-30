@@ -11,6 +11,7 @@ import type {
 import { gitCommandBashGuard } from '#guards/git-command-bash-guard.ts';
 
 const OPEN_GITHUB_PR_STATUS_KEY = 'open-github-pr';
+
 const OPEN_GITHUB_PR_STATUS_TEXT = '● open-github-pr: active';
 
 class OpenGithubPrWorkflow {
@@ -23,6 +24,7 @@ class OpenGithubPrWorkflow {
   public activate(pi: ExtensionAPI, ctx: ExtensionContext): boolean {
     if (this.isWorkflowActive()) {
       ctx.ui.notify('An open-github-pr workflow is already active.', 'warning');
+
       return false; // We don't activate it, because it's already active
     }
 
@@ -31,12 +33,14 @@ class OpenGithubPrWorkflow {
         'Wait for the current agent turn to finish before starting open-github-pr.',
         'warning',
       );
+
       return this.workflowActive;
     }
 
     this.workflowActive = true;
     gitCommandBashGuard.activate(pi);
     this.setTuiStatusBar(ctx);
+
     return this.workflowActive;
   }
 
@@ -46,6 +50,7 @@ class OpenGithubPrWorkflow {
     this.workflowActive = false;
     gitCommandBashGuard.deactivate();
     this.setTuiStatusBar(ctx);
+
     return this.workflowActive;
   }
 

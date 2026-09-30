@@ -87,6 +87,35 @@ type PullRequestDetails = PullRequestSummary & {
   state: string;
 };
 
+type PullRequestResponse = {
+  number: number;
+  title: string;
+  state: string;
+  url: string;
+  body: string;
+};
+
+type PullRequestResponseCandidate = {
+  number?: unknown;
+  title?: unknown;
+  state?: unknown;
+  url?: unknown;
+  body?: unknown;
+};
+
+const isPullRequestResponseCandidate = (
+  value: unknown,
+): value is PullRequestResponseCandidate =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const isPullRequestResponse = (value: unknown): value is PullRequestResponse =>
+  isPullRequestResponseCandidate(value) &&
+  typeof value.number === 'number' &&
+  typeof value.title === 'string' &&
+  typeof value.state === 'string' &&
+  typeof value.url === 'string' &&
+  typeof value.body === 'string';
+
 type CreateTemporaryBodyFileInput = {
   body: string;
 };
@@ -97,21 +126,25 @@ type TemporaryBodyFile = {
 };
 
 const TITLE_PREFIXES = ['feat:', 'fix:', 'chore:'] as const;
+
 const PULL_REQUEST_STATE = 'OPEN';
+
 const SECTION_MARKER = '##';
+
 const BULLET_MARKERS = ['- ', '* ', '+ '] as const;
+
 const PULL_REQUEST_TEMPLATE_URL = new URL(
   '../templates/pull-request_template.md',
   import.meta.url,
 );
 
-const getCommandErrorMessage = (error: unknown): string => {
-  if (error instanceof GitCommandError || error instanceof GitHubCommandError) {
-    return error.stderr.trim() || error.message;
+const getCommandErrorMessage = (cause: unknown): string => {
+  if (cause instanceof GitCommandError || cause instanceof GitHubCommandError) {
+    return cause.stderr.trim() || cause.message;
   }
 
-  if (error instanceof Error) {
-    return error.message;
+  if (cause instanceof Error) {
+    return cause.message;
   }
 
   return 'Unknown command failure.';
@@ -165,7 +198,7 @@ type AssertStringListInput = {
 };
 
 function assertSingleLine(field: string, value: string): void {
-  if (typeof value !== 'string' || !value.trim() || value !== value.trim()) {
+  if (!value.trim() || value !== value.trim()) {
     throw new Error(`${field} must contain non-empty plain text.`);
   }
 
@@ -293,6 +326,7 @@ const buildPullRequestBody = async ({
   description,
 }: Pick<PublishPullRequestInput, 'description'>): Promise<string> => {
   const template = await readFile(PULL_REQUEST_TEMPLATE_URL, 'utf8');
+
   const replacements = {
     problem: formatMarkdownBullets(description.problem),
     solution: formatMarkdownBullets(description.solution),
@@ -367,22 +401,12 @@ const readPullRequest = async ({
   const argumentsList = number
     ? ['pr', 'view', String(number), '--json', 'number,title,state,url,body']
     : ['pr', 'view', '--json', 'number,title,state,url,body'];
-  const result = await runGitHubCommand({ arguments: argumentsList, cwd });
-  const pullRequest = JSON.parse(result.stdout) as {
-    number?: unknown;
-    title?: unknown;
-    state?: unknown;
-    url?: unknown;
-    body?: unknown;
-  };
 
-  if (
-    typeof pullRequest.number !== 'number' ||
-    typeof pullRequest.title !== 'string' ||
-    typeof pullRequest.state !== 'string' ||
-    typeof pullRequest.url !== 'string' ||
-    typeof pullRequest.body !== 'string'
-  ) {
+  const result = await runGitHubCommand({ arguments: argumentsList, cwd });
+
+  const pullRequest: unknown = JSON.parse(result.stdout);
+
+  if (!isPullRequestResponse(pullRequest)) {
     throw new Error('GitHub returned an invalid pull request.');
   }
 

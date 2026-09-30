@@ -144,6 +144,12 @@ type ChildProcessError = Error & {
   code?: string | number;
 };
 
+type ExecFileError = ChildProcessError & {
+  killed?: boolean;
+  stdout?: string;
+  stderr?: string;
+};
+
 type RunGitCommandWithLimitedOutputInput = {
   arguments: readonly string[];
   cwd: string;
@@ -173,17 +179,18 @@ const runGitCommandWithLimitedOutput = async ({
       windowsHide: true,
     });
   } catch (cause) {
-    const error = cause as ChildProcessError;
+    const error: ChildProcessError | undefined =
+      cause instanceof Error ? cause : undefined;
 
     throw new GitCommandError({
       code:
-        error.code === 'ENOENT'
+        error?.code === 'ENOENT'
           ? GIT_COMMAND_ERROR_CODES.NOT_FOUND
           : GIT_COMMAND_ERROR_CODES.EXECUTION_FAILED,
       message:
-        error.code === 'ENOENT'
+        error?.code === 'ENOENT'
           ? 'Git executable was not found.'
-          : `Git command failed: ${error.message}`,
+          : `Git command failed: ${error?.message ?? String(cause)}`,
       arguments: gitArguments,
       cwd,
       stdout: '',
@@ -206,13 +213,14 @@ const runGitCommandWithLimitedOutput = async ({
 
   let timedOut = false;
   let processError: ChildProcessError | undefined;
+
   const timeoutId = setTimeout(() => {
     timedOut = true;
     child.kill('SIGKILL');
   }, timeoutMs);
 
-  child.once('error', (cause) => {
-    processError = cause as ChildProcessError;
+  child.once('error', (cause: ChildProcessError) => {
+    processError = cause;
   });
 
   try {
@@ -220,12 +228,16 @@ const runGitCommandWithLimitedOutput = async ({
       stream: child.stdout,
       maxChars: maxOutputChars,
     });
+
     const stderrPromise = readStreamOutput({
       stream: child.stderr,
       maxChars: maxOutputChars,
     });
+
     const closeResult = await once(child, 'close');
     const [stdout, stderr] = await Promise.all([stdoutPromise, stderrPromise]);
+
+    // JUSTIFICATION: ChildProcess's `close` event emits the exit code and signal in this order.
     const [exitCode, signal] = closeResult as [
       number | null,
       NodeJS.Signals | null,
@@ -256,16 +268,15 @@ const runGitCommandWithLimitedOutput = async ({
     }
 
     if (processError || exitCode !== 0) {
-      const normalizedExitCode = typeof exitCode === 'number' ? exitCode : null;
       const message = processError
         ? `Git command failed: ${processError.message}`
         : signal
           ? `Git command was terminated by ${signal}.`
-          : `Git command failed with exit code ${normalizedExitCode}.`;
+          : `Git command failed with exit code ${exitCode}.`;
 
       throw new GitCommandError({
         code:
-          normalizedExitCode === null
+          exitCode === null
             ? GIT_COMMAND_ERROR_CODES.EXECUTION_FAILED
             : GIT_COMMAND_ERROR_CODES.COMMAND_FAILED,
         message,
@@ -273,7 +284,7 @@ const runGitCommandWithLimitedOutput = async ({
         cwd,
         stdout: stdout.text,
         stderr: stderr.text,
-        exitCode: normalizedExitCode,
+        exitCode,
         cause: processError,
       });
     }
@@ -343,16 +354,13 @@ export const runGitCommand = async ({
       exitCode: 0,
     };
   } catch (cause) {
-    const error = cause as Error & {
-      code?: string | number;
-      killed?: boolean;
-      stdout?: string;
-      stderr?: string;
-    };
-    const stdout = error.stdout ?? '';
-    const stderr = error.stderr ?? '';
+    const error: ExecFileError | undefined =
+      cause instanceof Error ? cause : undefined;
 
-    if (error.killed) {
+    const stdout = error?.stdout ?? '';
+    const stderr = error?.stderr ?? '';
+
+    if (error?.killed) {
       throw new GitCommandError({
         code: GIT_COMMAND_ERROR_CODES.TIMEOUT,
         message: `Git command timed out after ${timeoutMs} ms.`,
@@ -364,7 +372,7 @@ export const runGitCommand = async ({
       });
     }
 
-    if (error.code === 'ENOENT') {
+    if (error?.code === 'ENOENT') {
       throw new GitCommandError({
         code: GIT_COMMAND_ERROR_CODES.NOT_FOUND,
         message: 'Git executable was not found.',
@@ -376,14 +384,14 @@ export const runGitCommand = async ({
       });
     }
 
-    const exitCode = typeof error.code === 'number' ? error.code : null;
+    const exitCode = Number.isInteger(error?.code) ? Number(error?.code) : null;
 
     throw new GitCommandError({
       code:
         exitCode === null
           ? GIT_COMMAND_ERROR_CODES.EXECUTION_FAILED
           : GIT_COMMAND_ERROR_CODES.COMMAND_FAILED,
-      message: `Git command failed: ${error.message}`,
+      message: `Git command failed: ${error?.message ?? String(cause)}`,
       arguments: gitArguments,
       cwd,
       stdout,

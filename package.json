@@ -50,11 +50,12 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest --run",
-    "check": "npm run lint && npm run typecheck && npm test",
+    "check": "npm run lint:fix && npm run typecheck && npm test",
     "prepublishOnly": "npm run check",
     "publish:npm": "npm publish --access public",
     "lint": "biome check .",
-    "lint:fix": "biome check --write ."
+    "lint:anti-slop": "oxlint --fix",
+    "lint:fix": "biome check --write . && npm run lint:anti-slop"
   },
   "peerDependencies": {
     "@earendil-works/pi-ai": "*",
@@ -62,7 +63,9 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.14",
+    "@oxlint/plugins": "1.86.0",
     "@types/node": "26.6.1",
+    "oxlint": "1.86.0",
     "typescript": "7.0.2",
     "vitest": "5.0.1"
   },
