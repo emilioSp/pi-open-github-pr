@@ -104,12 +104,12 @@ export const runGitHubCommand = async ({
       exitCode: 0,
     };
   } catch (cause) {
-    const error = cause as Error & {
+    const error: Error & {
       code?: string | number;
       killed?: boolean;
       stdout?: string;
       stderr?: string;
-    };
+    } = cause instanceof Error ? cause : new Error(String(cause));
 
     const stdout = error.stdout ?? '';
     const stderr = error.stderr ?? '';
@@ -138,7 +138,7 @@ export const runGitHubCommand = async ({
       });
     }
 
-    const exitCode = typeof error.code === 'number' ? error.code : null;
+    const exitCode = Number.isInteger(error.code) ? Number(error.code) : null;
 
     throw new GitHubCommandError({
       code:
