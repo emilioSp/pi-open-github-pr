@@ -173,7 +173,8 @@ const runGitCommandWithLimitedOutput = async ({
       windowsHide: true,
     });
   } catch (cause) {
-    const error = cause as ChildProcessError;
+    const error: ChildProcessError =
+      cause instanceof Error ? cause : new Error(String(cause));
 
     throw new GitCommandError({
       code:
@@ -212,8 +213,8 @@ const runGitCommandWithLimitedOutput = async ({
     child.kill('SIGKILL');
   }, timeoutMs);
 
-  child.once('error', (cause) => {
-    processError = cause as ChildProcessError;
+  child.once('error', (cause: ChildProcessError) => {
+    processError = cause;
   });
 
   try {
@@ -230,6 +231,7 @@ const runGitCommandWithLimitedOutput = async ({
     const closeResult = await once(child, 'close');
     const [stdout, stderr] = await Promise.all([stdoutPromise, stderrPromise]);
 
+    // SAFETY: ChildProcess's `close` event emits the exit code and signal in this order.
     const [exitCode, signal] = closeResult as [
       number | null,
       NodeJS.Signals | null,
@@ -260,17 +262,15 @@ const runGitCommandWithLimitedOutput = async ({
     }
 
     if (processError || exitCode !== 0) {
-      const normalizedExitCode = typeof exitCode === 'number' ? exitCode : null;
-
       const message = processError
         ? `Git command failed: ${processError.message}`
         : signal
           ? `Git command was terminated by ${signal}.`
-          : `Git command failed with exit code ${normalizedExitCode}.`;
+          : `Git command failed with exit code ${exitCode}.`;
 
       throw new GitCommandError({
         code:
-          normalizedExitCode === null
+          exitCode === null
             ? GIT_COMMAND_ERROR_CODES.EXECUTION_FAILED
             : GIT_COMMAND_ERROR_CODES.COMMAND_FAILED,
         message,
@@ -278,7 +278,7 @@ const runGitCommandWithLimitedOutput = async ({
         cwd,
         stdout: stdout.text,
         stderr: stderr.text,
-        exitCode: normalizedExitCode,
+        exitCode,
         cause: processError,
       });
     }
@@ -348,12 +348,12 @@ export const runGitCommand = async ({
       exitCode: 0,
     };
   } catch (cause) {
-    const error = cause as Error & {
+    const error: Error & {
       code?: string | number;
       killed?: boolean;
       stdout?: string;
       stderr?: string;
-    };
+    } = cause instanceof Error ? cause : new Error(String(cause));
 
     const stdout = error.stdout ?? '';
     const stderr = error.stderr ?? '';
@@ -382,7 +382,7 @@ export const runGitCommand = async ({
       });
     }
 
-    const exitCode = typeof error.code === 'number' ? error.code : null;
+    const exitCode = Number.isInteger(error.code) ? Number(error.code) : null;
 
     throw new GitCommandError({
       code:
