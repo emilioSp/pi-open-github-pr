@@ -87,6 +87,44 @@ type PullRequestDetails = PullRequestSummary & {
   state: string;
 };
 
+type PullRequestResponse = {
+  number: number;
+  title: string;
+  state: string;
+  url: string;
+  body: string;
+};
+
+const isString = (value: unknown): value is string => String(value) === value;
+
+type PullRequestResponseCandidate = {
+  number?: unknown;
+  title?: unknown;
+  state?: unknown;
+  url?: unknown;
+  body?: unknown;
+};
+
+const isPullRequestResponseCandidate = (
+  value: unknown,
+): value is PullRequestResponseCandidate =>
+  value instanceof Object && !Array.isArray(value);
+
+function assertPullRequestResponse(
+  value: unknown,
+): asserts value is PullRequestResponse {
+  if (
+    !isPullRequestResponseCandidate(value) ||
+    !Number.isFinite(value.number) ||
+    !isString(value.title) ||
+    !isString(value.state) ||
+    !isString(value.url) ||
+    !isString(value.body)
+  ) {
+    throw new Error('GitHub returned an invalid pull request.');
+  }
+}
+
 type CreateTemporaryBodyFileInput = {
   body: string;
 };
@@ -109,13 +147,13 @@ const PULL_REQUEST_TEMPLATE_URL = new URL(
   import.meta.url,
 );
 
-const getCommandErrorMessage = (error: unknown): string => {
-  if (error instanceof GitCommandError || error instanceof GitHubCommandError) {
-    return error.stderr.trim() || error.message;
+const getCommandErrorMessage = (cause: unknown): string => {
+  if (cause instanceof GitCommandError || cause instanceof GitHubCommandError) {
+    return cause.stderr.trim() || cause.message;
   }
 
-  if (error instanceof Error) {
-    return error.message;
+  if (cause instanceof Error) {
+    return cause.message;
   }
 
   return 'Unknown command failure.';
@@ -169,7 +207,7 @@ type AssertStringListInput = {
 };
 
 function assertSingleLine(field: string, value: string): void {
-  if (typeof value !== 'string' || !value.trim() || value !== value.trim()) {
+  if (!value.trim() || value !== value.trim()) {
     throw new Error(`${field} must contain non-empty plain text.`);
   }
 
@@ -375,23 +413,8 @@ const readPullRequest = async ({
 
   const result = await runGitHubCommand({ arguments: argumentsList, cwd });
 
-  const pullRequest = JSON.parse(result.stdout) as {
-    number?: unknown;
-    title?: unknown;
-    state?: unknown;
-    url?: unknown;
-    body?: unknown;
-  };
-
-  if (
-    typeof pullRequest.number !== 'number' ||
-    typeof pullRequest.title !== 'string' ||
-    typeof pullRequest.state !== 'string' ||
-    typeof pullRequest.url !== 'string' ||
-    typeof pullRequest.body !== 'string'
-  ) {
-    throw new Error('GitHub returned an invalid pull request.');
-  }
+  const pullRequest: unknown = JSON.parse(result.stdout);
+  assertPullRequestResponse(pullRequest);
 
   return {
     number: pullRequest.number,
