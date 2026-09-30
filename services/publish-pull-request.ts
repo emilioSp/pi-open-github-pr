@@ -95,8 +95,6 @@ type PullRequestResponse = {
   body: string;
 };
 
-const isString = (value: unknown): value is string => String(value) === value;
-
 type PullRequestResponseCandidate = {
   number?: unknown;
   title?: unknown;
@@ -108,22 +106,15 @@ type PullRequestResponseCandidate = {
 const isPullRequestResponseCandidate = (
   value: unknown,
 ): value is PullRequestResponseCandidate =>
-  value instanceof Object && !Array.isArray(value);
+  typeof value === 'object' && value !== null && !Array.isArray(value);
 
-function assertPullRequestResponse(
-  value: unknown,
-): asserts value is PullRequestResponse {
-  if (
-    !isPullRequestResponseCandidate(value) ||
-    !Number.isFinite(value.number) ||
-    !isString(value.title) ||
-    !isString(value.state) ||
-    !isString(value.url) ||
-    !isString(value.body)
-  ) {
-    throw new Error('GitHub returned an invalid pull request.');
-  }
-}
+const isPullRequestResponse = (value: unknown): value is PullRequestResponse =>
+  isPullRequestResponseCandidate(value) &&
+  typeof value.number === 'number' &&
+  typeof value.title === 'string' &&
+  typeof value.state === 'string' &&
+  typeof value.url === 'string' &&
+  typeof value.body === 'string';
 
 type CreateTemporaryBodyFileInput = {
   body: string;
@@ -414,7 +405,10 @@ const readPullRequest = async ({
   const result = await runGitHubCommand({ arguments: argumentsList, cwd });
 
   const pullRequest: unknown = JSON.parse(result.stdout);
-  assertPullRequestResponse(pullRequest);
+
+  if (!isPullRequestResponse(pullRequest)) {
+    throw new Error('GitHub returned an invalid pull request.');
+  }
 
   return {
     number: pullRequest.number,

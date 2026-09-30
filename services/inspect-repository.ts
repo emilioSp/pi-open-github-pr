@@ -72,6 +72,26 @@ type RepositoryMetadata = {
   defaultBranch: string;
 };
 
+type RepositoryMetadataResponse = {
+  nameWithOwner: string;
+  defaultBranchRef: {
+    name: string;
+  };
+};
+
+type RepositoryMetadataCandidate = {
+  nameWithOwner?: unknown;
+  defaultBranchRef?: {
+    name?: unknown;
+  };
+};
+
+type PullRequestSummaryCandidate = {
+  number?: unknown;
+  title?: unknown;
+  url?: unknown;
+};
+
 type RemoteDistance = {
   upstream: string | undefined;
   ahead: number;
@@ -106,13 +126,36 @@ const formatDiffOutput = ({
 const isGitCommandFailure = (error: unknown): error is GitCommandError =>
   error instanceof GitCommandError && error.code === 'command-failed';
 
-const getErrorMessage = (error: unknown): string => {
-  if (error instanceof GitCommandError || error instanceof GitHubCommandError) {
-    return error.stderr.trim() || error.message;
+const isRepositoryMetadataCandidate = (
+  value: unknown,
+): value is RepositoryMetadataCandidate =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const isRepositoryMetadata = (
+  value: unknown,
+): value is RepositoryMetadataResponse =>
+  isRepositoryMetadataCandidate(value) &&
+  typeof value.nameWithOwner === 'string' &&
+  typeof value.defaultBranchRef?.name === 'string';
+
+const isPullRequestSummaryCandidate = (
+  value: unknown,
+): value is PullRequestSummaryCandidate =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const isPullRequestSummary = (value: unknown): value is PullRequestSummary =>
+  isPullRequestSummaryCandidate(value) &&
+  typeof value.number === 'number' &&
+  typeof value.title === 'string' &&
+  typeof value.url === 'string';
+
+const getErrorMessage = (cause: unknown): string => {
+  if (cause instanceof GitCommandError || cause instanceof GitHubCommandError) {
+    return cause.stderr.trim() || cause.message;
   }
 
-  if (error instanceof Error) {
-    return error.message;
+  if (cause instanceof Error) {
+    return cause.message;
   }
 
   return 'Unknown command failure.';
@@ -128,15 +171,9 @@ const readRepositoryMetadata = async ({
     cwd,
   });
 
-  const metadata = JSON.parse(result.stdout) as {
-    nameWithOwner?: unknown;
-    defaultBranchRef?: { name?: unknown };
-  };
+  const metadata: unknown = JSON.parse(result.stdout);
 
-  if (
-    typeof metadata.nameWithOwner !== 'string' ||
-    typeof metadata.defaultBranchRef?.name !== 'string'
-  ) {
+  if (!isRepositoryMetadata(metadata)) {
     throw new Error('GitHub repository metadata is incomplete.');
   }
 
@@ -167,32 +204,18 @@ const readOpenPullRequests = async ({
     cwd,
   });
 
-  const pullRequests = JSON.parse(result.stdout) as unknown;
+  const pullRequests: unknown = JSON.parse(result.stdout);
 
   if (!Array.isArray(pullRequests)) {
     throw new Error('GitHub returned an invalid pull request list.');
   }
 
   return pullRequests.map((value) => {
-    const pullRequest = value as {
-      number?: unknown;
-      title?: unknown;
-      url?: unknown;
-    };
-
-    if (
-      typeof pullRequest.number !== 'number' ||
-      typeof pullRequest.title !== 'string' ||
-      typeof pullRequest.url !== 'string'
-    ) {
+    if (!isPullRequestSummary(value)) {
       throw new Error('GitHub returned an invalid pull request.');
     }
 
-    return {
-      number: pullRequest.number,
-      title: pullRequest.title,
-      url: pullRequest.url,
-    };
+    return value;
   });
 };
 
