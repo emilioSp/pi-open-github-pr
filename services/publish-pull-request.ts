@@ -97,9 +97,13 @@ type TemporaryBodyFile = {
 };
 
 const TITLE_PREFIXES = ['feat:', 'fix:', 'chore:'] as const;
+
 const PULL_REQUEST_STATE = 'OPEN';
+
 const SECTION_MARKER = '##';
+
 const BULLET_MARKERS = ['- ', '* ', '+ '] as const;
+
 const PULL_REQUEST_TEMPLATE_URL = new URL(
   '../templates/pull-request_template.md',
   import.meta.url,
@@ -293,6 +297,7 @@ const buildPullRequestBody = async ({
   description,
 }: Pick<PublishPullRequestInput, 'description'>): Promise<string> => {
   const template = await readFile(PULL_REQUEST_TEMPLATE_URL, 'utf8');
+
   const replacements = {
     problem: formatMarkdownBullets(description.problem),
     solution: formatMarkdownBullets(description.solution),
@@ -367,7 +372,9 @@ const readPullRequest = async ({
   const argumentsList = number
     ? ['pr', 'view', String(number), '--json', 'number,title,state,url,body']
     : ['pr', 'view', '--json', 'number,title,state,url,body'];
+
   const result = await runGitHubCommand({ arguments: argumentsList, cwd });
+
   const pullRequest = JSON.parse(result.stdout) as {
     number?: unknown;
     title?: unknown;

@@ -91,6 +91,7 @@ type FormatDiffOutputInput = DiffOutput & {
 
 // Keep model-facing diff output bounded to protect context and transcript size.
 const MAX_DIFF_CHARS = 120_000;
+
 const EMPTY_TEXT = '';
 
 const formatDiffOutput = ({
@@ -126,6 +127,7 @@ const readRepositoryMetadata = async ({
     arguments: ['repo', 'view', '--json', 'nameWithOwner,defaultBranchRef'],
     cwd,
   });
+
   const metadata = JSON.parse(result.stdout) as {
     nameWithOwner?: unknown;
     defaultBranchRef?: { name?: unknown };
@@ -164,6 +166,7 @@ const readOpenPullRequests = async ({
     ],
     cwd,
   });
+
   const pullRequests = JSON.parse(result.stdout) as unknown;
 
   if (!Array.isArray(pullRequests)) {
@@ -203,6 +206,7 @@ const readOptionalUpstream = async ({
       arguments: ['rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}'],
       cwd,
     });
+
     const upstream = result.stdout.trim();
 
     return upstream || undefined;
@@ -236,6 +240,7 @@ const readRemoteDistance = async ({
     arguments: ['rev-list', '--left-right', '--count', 'HEAD...@{u}'],
     cwd,
   });
+
   const [aheadText, behindText] = result.stdout.trim().split(/\s+/);
   const ahead = Number(aheadText);
   const behind = Number(behindText);
@@ -334,6 +339,7 @@ const assertBranch = async ({ cwd }: { cwd: string }): Promise<void> => {
     arguments: ['branch', '--show-current'],
     cwd,
   });
+
   const branch = result.stdout.trim();
 
   if (branch) return;
@@ -349,6 +355,7 @@ const assertOrigin = async ({ cwd }: { cwd: string }): Promise<void> => {
     arguments: ['remote', '-v'],
     cwd,
   });
+
   const hasOrigin = remoteResult.stdout
     .split('\n')
     .some((line) => line.startsWith('origin\t'));
@@ -397,6 +404,7 @@ const assertRemoteStateIsPublishable = async ({
 
 const assertBaseRef = async ({ cwd }: { cwd: string }): Promise<void> => {
   const metadata = await readRepositoryMetadata({ cwd });
+
   const baseRef = await resolveBaseRef({
     cwd,
     baseBranch: metadata.defaultBranch,
@@ -492,6 +500,7 @@ export const inspectRepository = async ({
       arguments: ['branch', '--show-current'],
       cwd,
     });
+
     const headResult = await runGitCommand({
       arguments: ['rev-parse', 'HEAD'],
       cwd,
@@ -525,6 +534,7 @@ export const inspectRepository = async ({
       truncated: diffStatResult.stdoutTruncated,
       truncationMarker: 'diff stat',
     });
+
     const diff = formatDiffOutput({
       text: diffResult.stdout,
       truncated: diffResult.stdoutTruncated,

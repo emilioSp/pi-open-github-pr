@@ -17,6 +17,7 @@ export default function openGithubPrExtension(pi: ExtensionAPI): void {
     description: 'Open or update a pull request for the current branch',
     handler: async (args, ctx) => {
       const active = openGithubPrWorkflow.activate(pi, ctx);
+
       if (!active) return;
 
       const workflowPrompt = `Run the open-github-pr workflow for the current checkout.

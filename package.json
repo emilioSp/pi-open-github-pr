@@ -55,6 +55,7 @@
     "publish:npm": "npm publish --access public",
     "lint": "biome check .",
     "lint:anti-slop": "oxlint",
+    "lint:anti-slop:fix": "oxlint --fix",
     "lint:fix": "biome check --write ."
   },
   "peerDependencies": {

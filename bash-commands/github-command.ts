@@ -110,6 +110,7 @@ export const runGitHubCommand = async ({
       stdout?: string;
       stderr?: string;
     };
+
     const stdout = error.stdout ?? '';
     const stderr = error.stderr ?? '';
 

@@ -206,6 +206,7 @@ const runGitCommandWithLimitedOutput = async ({
 
   let timedOut = false;
   let processError: ChildProcessError | undefined;
+
   const timeoutId = setTimeout(() => {
     timedOut = true;
     child.kill('SIGKILL');
@@ -220,12 +221,15 @@ const runGitCommandWithLimitedOutput = async ({
       stream: child.stdout,
       maxChars: maxOutputChars,
     });
+
     const stderrPromise = readStreamOutput({
       stream: child.stderr,
       maxChars: maxOutputChars,
     });
+
     const closeResult = await once(child, 'close');
     const [stdout, stderr] = await Promise.all([stdoutPromise, stderrPromise]);
+
     const [exitCode, signal] = closeResult as [
       number | null,
       NodeJS.Signals | null,
@@ -257,6 +261,7 @@ const runGitCommandWithLimitedOutput = async ({
 
     if (processError || exitCode !== 0) {
       const normalizedExitCode = typeof exitCode === 'number' ? exitCode : null;
+
       const message = processError
         ? `Git command failed: ${processError.message}`
         : signal
@@ -349,6 +354,7 @@ export const runGitCommand = async ({
       stdout?: string;
       stderr?: string;
     };
+
     const stdout = error.stdout ?? '';
     const stderr = error.stderr ?? '';
 

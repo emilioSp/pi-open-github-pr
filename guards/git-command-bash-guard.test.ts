@@ -10,9 +10,11 @@ import { gitCommandBashGuard } from '#guards/git-command-bash-guard.ts';
 describe('Bash guard', () => {
   it('blocks all Bash commands', async () => {
     let handler: ((event: unknown) => unknown) | undefined;
+
     const pi = {
       on: (_event: string, callback: (event: unknown) => unknown) => {
         handler = callback;
+
         return () => undefined;
       },
     };
@@ -33,9 +35,11 @@ describe('Bash guard', () => {
 
   it('allows non-Bash tool calls', async () => {
     let handler: ((event: unknown) => unknown) | undefined;
+
     const pi = {
       on: (_event: string, callback: (event: unknown) => unknown) => {
         handler = callback;
+
         return () => undefined;
       },
     };
