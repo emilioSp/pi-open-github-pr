@@ -3,23 +3,33 @@
  * Used: By the test suite.
  */
 
+import type {
+  ExtensionAPI,
+  ToolCallEvent,
+  ToolCallEventResult,
+} from '@earendil-works/pi-coding-agent';
 import { describe, expect, it } from 'vitest';
 
 import { gitCommandBashGuard } from '#guards/git-command-bash-guard.ts';
 
+type ToolCallHandler = (
+  event: ToolCallEvent,
+) => ToolCallEventResult | undefined;
+
 describe('Bash guard', () => {
   it('blocks all Bash commands', async () => {
-    let handler: ((event: unknown) => unknown) | undefined;
+    let handler: ToolCallHandler | undefined;
 
     const pi = {
-      on: (_event: string, callback: (event: unknown) => unknown) => {
+      on: (_event: 'tool_call', callback: ToolCallHandler) => {
         handler = callback;
 
         return () => undefined;
       },
     };
 
-    gitCommandBashGuard.activate(pi as never);
+    // SAFETY: The test mock implements the ExtensionAPI method used by the guard.
+    gitCommandBashGuard.activate(pi as ExtensionAPI);
 
     const result = await handler?.({
       type: 'tool_call',
@@ -34,17 +44,18 @@ describe('Bash guard', () => {
   });
 
   it('allows non-Bash tool calls', async () => {
-    let handler: ((event: unknown) => unknown) | undefined;
+    let handler: ToolCallHandler | undefined;
 
     const pi = {
-      on: (_event: string, callback: (event: unknown) => unknown) => {
+      on: (_event: 'tool_call', callback: ToolCallHandler) => {
         handler = callback;
 
         return () => undefined;
       },
     };
 
-    gitCommandBashGuard.activate(pi as never);
+    // SAFETY: The test mock implements the ExtensionAPI method used by the guard.
+    gitCommandBashGuard.activate(pi as ExtensionAPI);
 
     const result = await handler?.({
       type: 'tool_call',
