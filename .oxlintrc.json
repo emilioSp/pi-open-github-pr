@@ -32,13 +32,13 @@
   "rules": {
     "anti-slop/no-reduce-accumulator-copy": "error",
     "anti-slop/no-chained-type-assertions": "error",
-    "anti-slop/no-known-value-widening": "error",
+    "anti-slop/no-unnecessary-type-widening": "error",
     "anti-slop/no-object-parameters": "error",
-    "anti-slop/no-runtime-typeof": "error",
-    "anti-slop/no-unknown-type-aliases": "error",
-    "anti-slop/no-unsafe-dictionary-type": "error",
-    "anti-slop/no-widen-then-assert": "error",
-    "anti-slop/require-readable-spacing": "error",
-    "anti-slop/require-justification-comment-for-type-assertion": "error"
+    "anti-slop/no-typeof-outside-guards": "error",
+    "anti-slop/no-meaningless-unknown-aliases": "error",
+    "anti-slop/no-unsafe-dictionary-values": "error",
+    "anti-slop/no-narrowing-after-widening": "error",
+    "anti-slop/require-logical-blank-lines": "error",
+    "anti-slop/require-type-assertion-justification": "error"
   }
 }

@@ -82,54 +82,9 @@ The root `README.md` must include at least
 
 Bear in mind: the root `README.md` is not a changelog. Document stable user and operator workflows, not every feature.
 
-## Writing style
+## Task History & Repository State
 
-### Vertical Whitespace & Logical Paragraphs
+The repository history and task state are maintained in GitHub PRs. Rebuild task context before executing work:
 
-When writing code, you MUST use vertical whitespace (blank lines) to group related statements into "logical paragraphs". Do not squash all lines of code together.
-- Isolate Control Flow: leave a blank line before and after multi-line `if`, `for`, or `while` blocks.
-- Separate Setup from Execution: leave a blank line after an initial block of variable declarations.
-- Isolate Returns: leave a blank line before the final `return` statement of a function.
-- Group Cohesive Actions: keep consecutive variable declarations or tightly related short statements together without blank lines.
-
-```javascript
-// BAD EXAMPLE -- Too squished
-
-const issues = [...reconciliation.issues];
-if (isRunningPhase(state.phase) && reconciliation.worktreePath !== null) {
-  const handoffPath = getRunningHandoffPath({ ... });
-  if (await pathExists(handoffPath)) {
-    issues.push('Error message');
-  }
-}
-issues.push(...(await getAncestryIssues({ ... })));
-return issues;
-
-// GOOD EXAMPLE -- Proper logical paragraphs
-
-const issues = [...reconciliation.issues];
-
-if (isRunningPhase(state.phase) && reconciliation.worktreePath !== null) {
-  const handoffPath = getRunningHandoffPath({ ... });
-  
-  if (await pathExists(handoffPath)) {
-    issues.push('Error message');
-  }
-}
-
-issues.push(...(await getAncestryIssues({ ... })));
-
-return issues;
-
-// GOOD EXAMPLE -- Grouping related statements is allowed
-
-if (state.phase === WORKFLOW_PHASES.FINAL_REVIEW) {
-  return { ... };
-}
-
-// These two variables are tightly coupled, keep them together
-const reconciliation = await reconcileWorkflow({ paths, state });
-const issues = await detectIssues({ paths, state, reconciliation });
-
-return { ... };
-```
+1. Run `gh pr view --json body` to retrieve the PR description.
+2. Extract and parse the YAML payload under the `Agents read here` section to read prior changes, task history, and instructions.
