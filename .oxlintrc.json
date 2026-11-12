@@ -39,6 +39,7 @@
     "anti-slop/no-unsafe-dictionary-values": "error",
     "anti-slop/no-narrowing-after-widening": "error",
     "anti-slop/require-logical-blank-lines": "error",
-    "anti-slop/require-type-assertion-justification": "error"
+    "anti-slop/require-type-assertion-justification": "error",
+    "anti-slop/tests-require-given-when-then": "error"
   }
 }

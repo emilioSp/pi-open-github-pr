@@ -11,7 +11,7 @@ import {
 } from '#services/publish-pull-request.ts';
 
 describe('publish pull request', () => {
-  it('rejects a title without an allowed prefix', async () => {
+  it('given a title without an allowed prefix when publishing then the request is blocked without pushing', async () => {
     const result = await publishPullRequest({
       cwd: process.cwd(),
       title: 'docs: update the guide',
@@ -43,7 +43,7 @@ describe('publish pull request', () => {
     expect(result.gitPushExecuted).toBe(false);
   });
 
-  it('rejects Markdown headings inside problem bullet text', async () => {
+  it('given a Markdown heading in problem bullet text when publishing then the request is blocked without pushing', async () => {
     const result = await publishPullRequest({
       cwd: process.cwd(),
       title: 'chore: update the guide',

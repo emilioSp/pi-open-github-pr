@@ -12,7 +12,7 @@ import { describe, expect, it } from 'vitest';
 import { runGitCommand } from '#bash-commands/git-command.ts';
 
 describe('Git command output', () => {
-  it('truncates large stdout without failing the Git command', async () => {
+  it('given a large diff when running Git with an output limit then stdout is truncated and the command succeeds', async () => {
     const cwd = await mkdtemp(join(tmpdir(), 'pi-open-github-pr-git-command-'));
     const filePath = join(cwd, 'large.txt');
 

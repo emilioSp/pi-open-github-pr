@@ -17,7 +17,7 @@ type ToolCallHandler = (
 ) => ToolCallEventResult | undefined;
 
 describe('Bash guard', () => {
-  it('blocks all Bash commands', async () => {
+  it('given an active guard when a Bash tool call occurs then the call is blocked and terminated', async () => {
     let handler: ToolCallHandler | undefined;
 
     const pi = {
@@ -43,7 +43,7 @@ describe('Bash guard', () => {
     expect(result).toMatchObject({ block: true, terminate: true });
   });
 
-  it('allows non-Bash tool calls', async () => {
+  it('given an active guard when a read tool call occurs then no blocking result is returned', async () => {
     let handler: ToolCallHandler | undefined;
 
     const pi = {
